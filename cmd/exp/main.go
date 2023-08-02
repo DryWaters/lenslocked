@@ -3,12 +3,14 @@ package main
 import (
 	"html/template"
 	"os"
+	"time"
 )
 
 type User struct {
-	Name string
-	Age  int
-	Meta UserMeta
+	Name     string
+	Age      int
+	Meta     UserMeta
+	Birthday time.Time
 }
 
 type UserMeta struct {
@@ -22,8 +24,9 @@ func main() {
 	}
 
 	user := User{
-		Name: "John Doe",
-		Age:  111,
+		Name:     "John Doe",
+		Age:      111,
+		Birthday: time.Now(),
 		Meta: UserMeta{
 			Visits: 4,
 		},
