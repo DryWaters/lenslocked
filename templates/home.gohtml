@@ -1,2 +1,14 @@
 <h1>Welcome to my awesome site!!!</h1>
-{{ .Name }}
+{{template "lorem-ipsum"}}
+{{template "lorem-ipsum"}}
+{{template "lorem-ipsum"}}
+
+{{define "lorem-ipsum"}}
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc quis imperdiet purus.
+    Suspendisse quam justo, finibus ornare risus sit amet, accumsan porttitor dui.
+    Donec dictum sapien odio, et suscipit libero semper sit amet. Aliquam luctus,
+    magna eu mollis elementum, orci augue rhoncus magna, a interdum diam nulla at odio.
+    Curabitur venenatis lacinia felis, sed gravida augue aliquet ac. Nunc imperdiet urna
+    non dolor laoreet, non tempus leo dictum. Vestibulum pretium tortor eu risus maximus
+        iaculis. Aliquam non tortor posuere dui euismod fermentum nec at metus.</p>
+{{end}}
