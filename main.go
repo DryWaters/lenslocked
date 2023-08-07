@@ -15,13 +15,13 @@ func main() {
 	r.Use(middleware.Logger)
 
 	r.Get("/", controllers.StaticHandler(
-		views.Must(views.ParseFS(templates.FS, "home.gohtml"))))
+		views.Must(views.ParseFS(templates.FS, "home.gohtml", "layout-parts.gohtml"))))
 
 	r.Get("/contact", controllers.StaticHandler(
-		views.Must(views.ParseFS(templates.FS, "contact.gohtml"))))
+		views.Must(views.ParseFS(templates.FS, "contact.gohtml", "layout-parts.gohtml"))))
 
 	r.Get("/faq", controllers.FAQ(
-		views.Must(views.ParseFS(templates.FS, "faq.gohtml"))))
+		views.Must(views.ParseFS(templates.FS, "faq.gohtml", "layout-parts.gohtml"))))
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not found", http.StatusNotFound)
