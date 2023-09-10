@@ -11,7 +11,8 @@ type Users struct {
 		New    Template
 		SignIn Template
 	}
-	UserService *models.UserService
+	UserService    *models.UserService
+	SessionService *models.SessionService
 }
 
 func (u Users) New(w http.ResponseWriter, r *http.Request) {
@@ -31,6 +32,14 @@ func (u Users) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 		return
 	}
+	session, err := u.SessionService.Create(user.ID)
+	if err != nil {
+		fmt.Println(err)
+		http.Redirect(w, r, "/signin", http.StatusFound)
+		return
+	}
+	setCookie(w, CookieSession, session.Token)
+	http.Redirect(w, r, "/users/me", http.StatusFound)
 	fmt.Fprintf(w, "User created: %+v", user)
 }
 
@@ -55,22 +64,44 @@ func (u Users) ProcessSignIn(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 		return
 	}
-	cookie := http.Cookie{
-		Name:     "email",
-		Value:    user.Email,
-		Path:     "/",
-		HttpOnly: true,
+	session, err := u.SessionService.Create(user.ID)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		return
 	}
-	http.SetCookie(w, &cookie)
-	fmt.Fprintf(w, "User authenticated: %+v", user)
+	setCookie(w, CookieSession, session.Token)
+	http.Redirect(w, r, "/users/me", http.StatusFound)
 }
 
 func (u Users) CurrentUser(w http.ResponseWriter, r *http.Request) {
-	email, err := r.Cookie("email")
+	token, err := readCookie(r, CookieSession)
 	if err != nil {
-		fmt.Fprint(w, "The email cookie could not be read.")
+		fmt.Println(err)
+		http.Redirect(w, r, "/signin", http.StatusFound)
 		return
 	}
-	fmt.Fprintf(w, "Email cookie: %s\n", email.Value)
-	fmt.Fprintf(w, "Headers: %+v\n", r.Header)
+	user, err := u.SessionService.User(token)
+	if err != nil {
+		fmt.Println(err)
+		http.Redirect(w, r, "/signin", http.StatusFound)
+		return
+	}
+	fmt.Fprintf(w, "Current user: %s\n", user.Email)
+}
+
+func (u Users) ProcessSignOut(w http.ResponseWriter, r *http.Request) {
+	token, err := readCookie(r, CookieSession)
+	if err != nil {
+		http.Redirect(w, r, "/signin", http.StatusFound)
+		return
+	}
+	err = u.SessionService.Delete(token)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+	deleteCookie(w, CookieSession)
+	http.Redirect(w, r, "/signin", http.StatusFound)
 }

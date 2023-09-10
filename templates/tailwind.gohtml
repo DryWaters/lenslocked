@@ -5,6 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <title>LensLocked</title>
 </head>
 <body class="min-h-screen bg-gray-100">
     <header class="bg-gradient-to-r from-blue-800 to-indigo-800 text-white">
@@ -16,6 +17,12 @@
                 <a class="text-lg font-semibold hover:text-blue-100 pr-8" href="/faq">FAQ</a>
             </div>
             <div>
+                <form action="/signout" method="post" class="inline pr-4">
+                    <div class="hidden">
+                        {{csrfField}}
+                    </div>
+                    <button type="submit">Sign out</button>
+                </form>
                 <a class="pr-4" href="/signin">Sign in</a>
                 <a class="px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded" href="/signup">Sign up</a>
             </div>
