@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/drywaters/lenslocked/controllers"
+	"github.com/drywaters/lenslocked/migrations"
 	"github.com/drywaters/lenslocked/models"
 	"github.com/drywaters/lenslocked/templates"
 	"github.com/drywaters/lenslocked/views"
@@ -26,10 +27,18 @@ func main() {
 		views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))))
 
 	cfg := models.DefaultPostgresConfig()
+	fmt.Println(cfg.String())
 	db, err := models.Open(cfg)
 	if err != nil {
 		panic(err)
 	}
+	defer db.Close()
+
+	err = models.MigrateFS(db, migrations.FS, ".")
+	if err != nil {
+		panic(err)
+	}
+
 	userService := models.UserService{
 		DB: db,
 	}
