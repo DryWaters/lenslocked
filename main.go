@@ -14,18 +14,7 @@ import (
 )
 
 func main() {
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-
-	r.Get("/", controllers.StaticHandler(
-		views.Must(views.ParseFS(templates.FS, "home.gohtml", "tailwind.gohtml"))))
-
-	r.Get("/contact", controllers.StaticHandler(
-		views.Must(views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))))
-
-	r.Get("/faq", controllers.FAQ(
-		views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))))
-
+	// Setup database
 	cfg := models.DefaultPostgresConfig()
 	fmt.Println(cfg.String())
 	db, err := models.Open(cfg)
@@ -33,12 +22,12 @@ func main() {
 		panic(err)
 	}
 	defer db.Close()
-
 	err = models.MigrateFS(db, migrations.FS, ".")
 	if err != nil {
 		panic(err)
 	}
 
+	// Setup services
 	userService := models.UserService{
 		DB: db,
 	}
@@ -46,6 +35,15 @@ func main() {
 		DB: db,
 	}
 
+	// Setup middleware
+	umw := controllers.UserMiddleware{
+		SessionService: &sessionService,
+	}
+
+	csrfKey := []byte("gFvi45R4fy5xNBlnEEZtQbfAVCYEIAUX")
+	csrfMw := csrf.Protect(csrfKey, csrf.Secure(false))
+
+	// Setup controllers
 	userController := controllers.Users{
 		UserService:    &userService,
 		SessionService: &sessionService,
@@ -53,18 +51,31 @@ func main() {
 	userController.Templates.New = views.Must(views.ParseFS(templates.FS, "signup.gohtml", "tailwind.gohtml"))
 	userController.Templates.SignIn = views.Must(views.ParseFS(templates.FS, "signin.gohtml", "tailwind.gohtml"))
 
+	// Setup our router and routes
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Use(csrfMw)
+	r.Use(umw.SetUser)
+	r.Get("/", controllers.StaticHandler(
+		views.Must(views.ParseFS(templates.FS, "home.gohtml", "tailwind.gohtml"))))
+	r.Get("/contact", controllers.StaticHandler(
+		views.Must(views.ParseFS(templates.FS, "contact.gohtml", "tailwind.gohtml"))))
+	r.Get("/faq", controllers.FAQ(
+		views.Must(views.ParseFS(templates.FS, "faq.gohtml", "tailwind.gohtml"))))
 	r.Get("/signup", userController.New)
 	r.Post("/users", userController.Create)
 	r.Get("/signin", userController.SignIn)
 	r.Post("/signin", userController.ProcessSignIn)
 	r.Post("/signout", userController.ProcessSignOut)
-	r.Get("/users/me", userController.CurrentUser)
-
+	r.Route("/users/me", func(r chi.Router) {
+		r.Use(umw.RequireUser)
+		r.Get("/", userController.CurrentUser)
+	})
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not found", http.StatusNotFound)
 	})
+
+	// Start the server
 	fmt.Println("Starting the server on :3000...")
-	csrfKey := []byte("gFvi45R4fy5xNBlnEEZtQbfAVCYEIAUX")
-	csrfMw := csrf.Protect(csrfKey, csrf.Secure(false))
-	http.ListenAndServe(":3000", csrfMw(r))
+	http.ListenAndServe(":3000", r)
 }
