@@ -3,10 +3,9 @@ package models
 import (
 	"database/sql"
 	"fmt"
+	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/pressly/goose/v3"
 	"io/fs"
-
-	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 // Open will open a SQL connection with the provided
@@ -25,10 +24,10 @@ func DefaultPostgresConfig() PostgresConfig {
 	return PostgresConfig{
 		Host:     "localhost",
 		Port:     "5432",
-		User:     "baloo",
-		Password: "junglebook",
-		Database: "lenslocked",
-		SSLMode:  "disable",
+		User:     "postgres",
+		Password: "password",
+		Database: "public",
+		SSLMode:  "false",
 	}
 }
 

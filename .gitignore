@@ -1,1 +1,5 @@
+# Intellij
 .idea
+
+# Env Variables
+.env
