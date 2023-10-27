@@ -4,18 +4,25 @@
     <head>
         <meta charset="UTF-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+        <script src="https://cdn.tailwindcss.com"></script>
         <title>LensLocked</title>
     </head>
     <body class="min-h-screen bg-gray-100">
     <header class="bg-gradient-to-r from-blue-800 to-indigo-800 text-white">
         <nav class="px-8 py-6 flex items-center">
             <div class="text-4xl pr-12 font-serif">Lenslocked</div>
-            <div class="flex-grow">
+            <div class="">
                 <a class="text-lg font-semibold hover:text-blue-100 pr-8" href="/">Home</a>
                 <a class="text-lg font-semibold hover:text-blue-100 pr-8" href="/contact">Contact</a>
                 <a class="text-lg font-semibold hover:text-blue-100 pr-8" href="/faq">FAQ</a>
             </div>
+            {{if currentUser}}
+                <div class="flex-grow flex flex-row-reverse">
+                    <a class="text-lg font-semibold hover:text-blue-100 pr-8" href="/galleries">My Galleries</a>
+                </div>
+            {{else}}
+                <div class="flex-grow"></div>
+            {{end}}
             <div>
                 {{ if currentUser }}
                     <form action="/signout" method="post" class="inline pr-4">
@@ -31,11 +38,35 @@
             </div>
         </nav>
     </header>
+    {{/*Alerts*/}}
+    {{if errors}}
+        <div class="py-4 px-2">
+            {{range errors}}
+                <div class="closable flex bg-red-100 rounded px-2 py-2 text-red-800 mb-2">
+                    <div class="flex-grow">
+                        {{.}}
+                    </div>
+                    <a href="#" onclick="closeAlert(event)">
+                        <svg class="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </a>
+                </div>
+            {{end}}
+        </div>
+    {{end}}
 {{end}}
 
 <!-- Each page's content goes here. -->
 
 {{define "footer"}}
+    <script>
+        function closeAlert(event) {
+            let closeable = event.target.closest(".closable")
+            closeable.remove();
+        }
+    </script>
     </body>
     </html>
 {{end}}
