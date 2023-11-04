@@ -3,3 +3,6 @@
 
 # Env Variables
 .env
+
+# Images for development
+/images/

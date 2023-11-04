@@ -19,6 +19,22 @@
             </button>
         </div>
     </form>
+    <div class="py4">
+        {{template "upload_image_form" .}}
+    </div>
+    <div class="py-4">
+        <h2 class="pb-4 text-sm font-semibold text-gray-800">Current Images</h2>
+        <div class="grid grid-cols-8 gap-2">
+            {{range .Images}}
+                <div class="h-min w-full relative">
+                    <div class="absolute top-2 right-2">
+                        {{template "delete_image_form" .}}
+                    </div>
+                    <img src="/galleries/{{.GalleryID}}/images/{{.FilenameEscaped}}" alt="Gallery Image" class="w-full">
+                </div>
+            {{end}}
+        </div>
+    </div>
     <!-- Danger Actions -->
     <div class="py-4">
         <h2>Dangerous Actions</h2>
@@ -35,3 +51,48 @@
 </div>
 
 {{template "footer" .}}
+
+
+{{define "upload_image_form"}}
+    <form action="/galleries/{{.ID}}/images"
+          method="post"
+          enctype="multipart/form-data">
+        {{csrfField}}
+        <div class="py-2">
+            <label for="images" class="block mb-2 text-sm font-semibold text-gray-800">
+                Add images
+                <p class="py-2 text-xs text-gray-600 font-normal">
+                    Please only upload jpg, png, and gif files
+                </p>
+            </label>
+            <input type="file" multiple name="images" accept="image/png, image/jpeg, image/gif" id="images" />
+        </div>
+        <button
+                type="submit"
+                class="
+                py-2 px-8
+                bg-indigo-600 hover:bg-indigo-700
+                text-white text-lg font-bold
+                rounded">
+            Upload
+        </button>
+    </form>
+{{end}}
+
+{{define "delete_image_form"}}
+    <form action="/galleries/{{.GalleryID}}/images/{{.FilenameEscaped}}/delete"
+          method="post"
+          onsubmit="return confirm('Do you really want to delete this image?');">
+        {{csrfField}}
+        <button
+                type="submit"
+                class="
+                p-1
+                text-xs text-red-800
+                bg-red-100
+                border border-red-400
+                rounded">
+            Delete
+        </button>
+    </form>
+{{end}}
