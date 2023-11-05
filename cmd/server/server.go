@@ -34,13 +34,17 @@ func loadEnvConfig() (config, error) {
 	if err != nil {
 		return cfg, err
 	}
-
-	cfg.PSQL.Host = os.Getenv("DB_HOST")
-	cfg.PSQL.Port = os.Getenv("DB_PORT")
-	cfg.PSQL.User = os.Getenv("DB_USERNAME")
-	cfg.PSQL.Password = os.Getenv("DB_PASSWORD")
-	cfg.PSQL.Database = os.Getenv("DB_DATABASE")
-	cfg.PSQL.SSLMode = os.Getenv("DB_SSL_MODE")
+	cfg.PSQL = models.PostgresConfig{
+		Host:     os.Getenv("PSQL_HOST"),
+		Port:     os.Getenv("PSQL_PORT"),
+		User:     os.Getenv("PSQL_USER"),
+		Password: os.Getenv("PSQL_PASSWORD"),
+		Database: os.Getenv("PSQL_DATABASE"),
+		SSLMode:  os.Getenv("PSQL_SSL_MODE"),
+	}
+	if cfg.PSQL.Host == "" && cfg.PSQL.Port == "" {
+		return cfg, fmt.Errorf("no PSQL config provided")
+	}
 
 	cfg.SMTP.Host = os.Getenv("SMTP_HOST")
 	portStr := os.Getenv("SMTP_PORT")
@@ -66,16 +70,22 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	err = run(cfg)
+	if err != nil {
+		panic(err)
+	}
+}
 
+func run(cfg config) error {
 	// Setup database
 	db, err := models.Open(cfg.PSQL)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer db.Close()
 	err = models.MigrateFS(db, migrations.FS, ".")
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// Setup services
@@ -165,14 +175,15 @@ func main() {
 			r.Post("/{id}/images", galleryController.UploadImage)
 		})
 	})
+
+	assetsHandler := http.FileServer(http.Dir("assets"))
+	r.Get("/assets/*", http.StripPrefix("/assets", assetsHandler).ServeHTTP)
+
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not found", http.StatusNotFound)
 	})
 
 	// Start the server
 	fmt.Println("Starting the server on :3000...")
-	err = http.ListenAndServe(cfg.Server.Address, r)
-	if err != nil {
-		panic(err)
-	}
+	return http.ListenAndServe(cfg.Server.Address, r)
 }

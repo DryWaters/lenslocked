@@ -20,17 +20,6 @@ func Open(config PostgresConfig) (*sql.DB, error) {
 	return db, nil
 }
 
-func DefaultPostgresConfig() PostgresConfig {
-	return PostgresConfig{
-		Host:     "localhost",
-		Port:     "5432",
-		User:     "postgres",
-		Password: "password",
-		Database: "public",
-		SSLMode:  "false",
-	}
-}
-
 type PostgresConfig struct {
 	Host     string
 	Port     string
